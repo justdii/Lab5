@@ -1,6 +1,9 @@
-INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, EOF = (
-    'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'EOF'
+(INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN,
+ BEGIN, END, SEMI, DOT, EOF) = (
+    'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'ID', 'ASSIGN',
+    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF'
 )
+
 class Token(object):
     def __init__(self, type, value):
         self.type = type
@@ -14,6 +17,11 @@ class Token(object):
 
     def __repr__(self):
         return self.__str__()
+
+RESERVED_KEYWORDS = {
+    'BEGIN': Token('BEGIN', 'BEGIN'),
+    'END': Token('END', 'END'),
+}
 
 class Lexer(object):
     def __init__(self, text):
@@ -32,6 +40,13 @@ class Lexer(object):
         else:
             self.current_char = self.text[self.pos]
 
+     def peek(self):
+        peek_pos = self.pos + 1
+        if peek_pos > len(self.text) - 1:
+            return None
+        else:
+            return self.text[peek_pos]
+
     def skip_whitespace(self):
         while self.current_char is not None and self.current_char.isspace():
             self.advance()
@@ -44,9 +59,18 @@ class Lexer(object):
             self.advance()
         return int(result)
 
+    def _id(self):
+        """Handle identifiers and reserved keywords"""
+        result = ''
+        while self.current_char is not None and self.current_char.isalnum():
+            result += self.current_char
+            self.advance()
+
+        token = RESERVED_KEYWORDS.get(result, Token(ID, result))
+        return token
+
     def get_next_token(self):
         """Lexical analyzer (also known as scanner or tokenizer)
-
         This method is responsible for breaking a sentence
         apart into tokens. One token at a time.
         """
@@ -56,8 +80,20 @@ class Lexer(object):
                 self.skip_whitespace()
                 continue
 
+            if self.current_char.isalpha():
+                return self._id()
+
             if self.current_char.isdigit():
                 return Token(INTEGER, self.integer())
+
+            if self.current_char == ':' and self.peek() == '=':
+                self.advance()
+                self.advance()
+                return Token(ASSIGN, ':=')
+
+            if self.current_char == ';':
+                self.advance()
+                return Token(SEMI, ';')
 
             if self.current_char == '+':
                 self.advance()
@@ -83,6 +119,10 @@ class Lexer(object):
                 self.advance()
                 return Token(RPAREN, ')')
 
+            if self.current_char == '.':
+                self.advance()
+                return Token(DOT, '.')
+
             self.error()
 
         return Token(EOF, None)
@@ -107,6 +147,30 @@ class Num(AST):
     def __init__(self, token):
         self.token = token
         self.value = token.value
+
+
+class Compound(AST):
+    """Represents a 'BEGIN ... END' block"""
+    def __init__(self):
+        self.children = []
+
+
+class Assign(AST):
+    def __init__(self, left, op, right):
+        self.left = left
+        self.token = self.op = op
+        self.right = right
+
+
+class Var(AST):
+    """The Var node is constructed out of ID token."""
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
+
+class NoOp(AST):
+    pass
 
 
 class Parser(object):
