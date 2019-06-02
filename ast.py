@@ -1,7 +1,7 @@
 (INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN,
- BEGIN, END, SEMI, DOT, EOF) = (
+ BEGIN, END, SEMI, DOT, EOF, PRINT) = (
     'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'ID', 'ASSIGN',
-    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF'
+    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF', 'PRINT'
 )
 
 class Token(object):
@@ -21,11 +21,13 @@ class Token(object):
 RESERVED_KEYWORDS = {
     'BEGIN': Token('BEGIN', 'BEGIN'),
     'END': Token('END', 'END'),
+    'PRINT': Token('PRINT', 'PRINT'),
 }
 
 class Lexer(object):
     def __init__(self, text):
-        self.text = "BEGIN\n" + text + "\nEND."
+        # self.text = "BEGIN\n" + text + "\nEND."
+        self.text = text.upper()
         self.pos = 0
         self.current_char = self.text[self.pos]
 
@@ -158,6 +160,12 @@ class Assign(AST):
         self.right = right
 
 
+class Print(AST):
+    def __init__(self, op, right):
+        self.token = self.op = op
+        self.right = right
+
+
 class Var(AST):
     """The Var node is constructed out of ID token."""
     def __init__(self, token):
@@ -186,14 +194,13 @@ class Parser(object):
     def program(self):
         """program : compound_statement DOT"""
         node = self.compound_statement()
-        self.eat(DOT)
         return node
 
     def compound_statement(self):
   
-        self.eat(BEGIN)
+        # self.eat(BEGIN)
         nodes = self.statement_list()
-        self.eat(END)
+        # self.eat(END)
 
         root = Compound()
         for node in nodes:
@@ -218,6 +225,8 @@ class Parser(object):
     def statement(self):
         if self.current_token.type == BEGIN:
             node = self.compound_statement()
+        elif self.current_token.type == PRINT:
+            node = self.print_statement()
         elif self.current_token.type == ID:
             node = self.assignment_statement()
         else:
@@ -233,6 +242,13 @@ class Parser(object):
         self.eat(ASSIGN)
         right = self.expr()
         node = Assign(left, token, right)
+        return node
+
+    def print_statement(self):
+        token = self.current_token
+        self.eat(PRINT)
+        right = self.expr()
+        node = Print(token, right)
         return node
 
     def variable(self):
@@ -346,6 +362,9 @@ class Interpreter(NodeVisitor):
     def visit_Assign(self, node):
         var_name = node.left.value
         self.GLOBAL_SCOPE[var_name] = self.visit(node.right)
+
+    def visit_Print(self, node):
+        print(self.visit(node.right))
 
     def visit_Var(self, node):
         var_name = node.value
