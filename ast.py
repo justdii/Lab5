@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 (INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN,
  BEGIN, END, SEMI, DOT, EOF, PRINT) = (
     'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'ID', 'ASSIGN',
@@ -82,7 +84,14 @@ class Lexer(object):
                 return self._id()
 
             if self.current_char.isdigit():
-                return Token(INTEGER, self.integer())
+                integer = self.integer()
+                if self.current_char == '.':
+                    self.advance()
+                    real = self.integer()
+                else:
+                    real = 0
+                number = Decimal(str(integer) + '.' + str(real))
+                return Token(INTEGER, number)
 
             if self.current_char == ':' and self.peek() == '=':
                 self.advance()

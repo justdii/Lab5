@@ -2,9 +2,9 @@ from ast import *
 
 def main():
     text = '''
-    a := 5 + 7;
+    a := 5.3 + 7;
     b:= a * 3;
-    print 7
+    print a
     '''
 
     lexer = Lexer(text)
