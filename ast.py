@@ -1,9 +1,9 @@
 from decimal import Decimal
 
 (INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN,
- BEGIN, END, SEMI, DOT, EOF, PRINT) = (
+ BEGIN, END, SEMI, DOT, EOF, PRINT, IF, ELSE, OPEN, CLOSE) = (
     'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'ID', 'ASSIGN',
-    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF', 'PRINT'
+    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF', 'PRINT', 'IF', "ELSE", "{", "}"
 )
 
 class Token(object):
@@ -24,6 +24,8 @@ RESERVED_KEYWORDS = {
     'BEGIN': Token('BEGIN', 'BEGIN'),
     'END': Token('END', 'END'),
     'PRINT': Token('PRINT', 'PRINT'),
+    'IF': Token('IF', 'IF'),
+    'ELSE': Token('ELSE', 'ELSE')
 }
 
 class Lexer(object):
@@ -126,6 +128,14 @@ class Lexer(object):
                 self.advance()
                 return Token(RPAREN, ')')
 
+            if self.current_char == '{':
+                self.advance()
+                return Token(OPEN, '{')
+            
+            if self.current_char == '}':
+                self.advance()
+                return Token(CLOSE, '}')
+
             if self.current_char == '.':
                 self.advance()
                 return Token(DOT, '.')
@@ -174,6 +184,12 @@ class Print(AST):
         self.token = self.op = op
         self.right = right
 
+class If(AST):
+    def __init__(self, op, condition, left, right):
+        self.token = self.op = op
+        self.condition = condition
+        self.left = left # on True
+        self.right = right # else-branch
 
 class Var(AST):
     """The Var node is constructed out of ID token."""
@@ -201,15 +217,10 @@ class Parser(object):
             self.error()
 
     def program(self):
-        """program : compound_statement DOT"""
-        node = self.compound_statement()
-        return node
-
-    def compound_statement(self):
-  
-        # self.eat(BEGIN)
+        """
+        compound_statement: statement_list
+        """
         nodes = self.statement_list()
-        # self.eat(END)
 
         root = Compound()
         for node in nodes:
@@ -218,6 +229,9 @@ class Parser(object):
         return root
 
     def statement_list(self):
+        """
+        statement_list : statement (SEMI statement)*
+        """
         node = self.statement()
 
         results = [node]
@@ -232,8 +246,13 @@ class Parser(object):
         return results
 
     def statement(self):
-        if self.current_token.type == BEGIN:
-            node = self.compound_statement()
+        """
+        statement : assignment_statement
+                  | if_else_statement
+                  | empty
+        """
+        if self.current_token.type == IF:
+            node = self.if_else_statement()
         elif self.current_token.type == PRINT:
             node = self.print_statement()
         elif self.current_token.type == ID:
@@ -241,6 +260,30 @@ class Parser(object):
         else:
             node = self.empty()
         return node
+
+    def if_else_statement(self):
+        """
+        if_else_statement : IF expr OPEN statement_list CLOSE 
+                             (ELSE OPEN statement_list CLOSE)
+        """
+        token = self.current_token
+        self.eat(IF)
+
+        condition = self.expr()
+
+        self.eat(OPEN)
+        left = self.statement_list()
+        right = NoOp()
+        self.eat(CLOSE)
+
+        if self.current_token.type == ELSE:
+            self.eat(ELSE)
+            self.eat(OPEN)
+            right = self.statement_list()
+            self.eat(CLOSE)
+
+        return If(token, condition, left, right)
+
 
     def assignment_statement(self):
         """
@@ -254,6 +297,9 @@ class Parser(object):
         return node
 
     def print_statement(self):
+        """
+        print_statement: PRINT expr
+        """
         token = self.current_token
         self.eat(PRINT)
         right = self.expr()
@@ -272,6 +318,9 @@ class Parser(object):
         return NoOp()
 
     def expr(self):
+        """
+        expr   : term ((PLUS | MINUS) term)*
+        """
         node = self.term()
 
         while self.current_token.type in (PLUS, MINUS):
@@ -286,6 +335,9 @@ class Parser(object):
         return node
 
     def term(self):
+        """
+        term : factor ((MUL | DIV) factor)*
+        """
         node = self.factor()
 
         while self.current_token.type in (MUL, DIV):
@@ -300,6 +352,12 @@ class Parser(object):
         return node
 
     def factor(self):
+        """factor : PLUS  factor
+                  | MINUS factor
+                  | INTEGER
+                  | LPAREN expr RPAREN
+                  | variable
+        """
         token = self.current_token
         if token.type == PLUS:
             self.eat(PLUS)
@@ -382,6 +440,17 @@ class Interpreter(NodeVisitor):
             raise NameError(repr(var_name))
         else:
             return val
+
+    def visit_If(self, node):
+        condition = node.condition
+        left = node.left
+        right = node.right
+        if self.visit(condition) > 0:
+            for statement in left:
+                self.visit(statement)
+        else:
+            for statement in right:
+                self.visit(statement)
 
     def visit_NoOp(self, node):
         pass
