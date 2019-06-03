@@ -1,0 +1,15 @@
+print 1;
+c := 8;
+a := c / 2;
+if a {
+    print 1;
+    if a - c {
+        print a - c
+    }else{
+        print c - a
+    };
+    print 10
+}else{
+    print 100
+};
+print a*c
