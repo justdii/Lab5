@@ -216,7 +216,7 @@ class Parser(object):
         else:
             self.error()
 
-    def program(self):
+    def compound_statement(self):
         """
         compound_statement: statement_list
         """
@@ -263,8 +263,8 @@ class Parser(object):
 
     def if_else_statement(self):
         """
-        if_else_statement : IF expr OPEN statement_list CLOSE 
-                             (ELSE OPEN statement_list CLOSE)
+        if_else_statement : IF expr OPEN compound_statement CLOSE 
+                             (ELSE OPEN compound_statement CLOSE)
         """
         token = self.current_token
         self.eat(IF)
@@ -272,18 +272,17 @@ class Parser(object):
         condition = self.expr()
 
         self.eat(OPEN)
-        left = self.statement_list()
+        left = self.compound_statement()
         right = NoOp()
         self.eat(CLOSE)
 
         if self.current_token.type == ELSE:
             self.eat(ELSE)
             self.eat(OPEN)
-            right = self.statement_list()
+            right = self.compound_statement()
             self.eat(CLOSE)
 
         return If(token, condition, left, right)
-
 
     def assignment_statement(self):
         """
@@ -380,7 +379,7 @@ class Parser(object):
             return node
 
     def parse(self):
-        node = self.program()
+        node = self.compound_statement()
         if self.current_token.type != EOF:
             self.error()
 
@@ -446,11 +445,9 @@ class Interpreter(NodeVisitor):
         left = node.left
         right = node.right
         if self.visit(condition) > 0:
-            for statement in left:
-                self.visit(statement)
+            self.visit(left)
         else:
-            for statement in right:
-                self.visit(statement)
+            self.visit(right)
 
     def visit_NoOp(self, node):
         pass

@@ -8,7 +8,15 @@ if a {
     }else{
         print c - a
     };
-    print 10
+    print 10;
+    if 10 {
+        if a - 10 {
+
+        }else{
+            print 128
+        };
+        if 9 {}
+    }
 }else{
     print 100
 };
