@@ -1,6 +1,6 @@
 print 1;
-c := 8;
-a := c / 2;
+c := 8* 0;
+a :=  0 * (c-1);
 if a {
     print 1;
     if a - c {
@@ -13,11 +13,12 @@ if a {
         if a - 10 {
 
         }else{
-            print 128
+            print 0*128
         };
         if 9 {}
     }
 }else{
-    print 100
+    print (a*c+10-999999) * 1
 };
-print a*c
+print a*c;
+print 1 * (a*c+10-999999)
