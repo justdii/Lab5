@@ -48,10 +48,14 @@ class Parser(object):
                   | if_else_statement
                   | empty
         """
-        if self.current_token.type == IF:
+        if self.current_token.type == FUN:
+            node = self.fun_declaration()
+        elif self.current_token.type == IF:
             node = self.if_else_statement()
         elif self.current_token.type == PRINT:
             node = self.print_statement()
+        elif self.current_token.type == FUN_ID:
+            node = self.fun_invoke()
         elif self.current_token.type == ID:
             node = self.assignment_statement()
         else:
@@ -81,6 +85,33 @@ class Parser(object):
 
         return If(token, condition, left, right)
 
+    def fun_declaration(self):
+        """
+        fun_declaration : FUN FUN_ID LPARENT RPARENT OPEN compound_statement CLOSE
+        """
+        token = self.current_token
+        print(token)
+        self.eat(FUN)
+        id = self.fun_name()
+        print(self.current_token)
+        self.eat(LPAREN)
+        self.eat(RPAREN)
+        self.eat(OPEN)
+        statement = self.compound_statement()
+        self.eat(CLOSE)
+
+        return FunDeclaration(token, id, statement)
+
+    def fun_invoke(self):
+        """
+        fun_invoke : FUN_ID LPARENT RPARENT
+        """
+        token = self.current_token
+        id = self.fun_name()
+        self.eat(LPAREN)
+        self.eat(RPAREN)
+        return FunInvoke(token, id)
+
     def assignment_statement(self):
         """
         assignment_statement : variable ASSIGN expr
@@ -108,6 +139,14 @@ class Parser(object):
         """
         node = Var(self.current_token)
         self.eat(ID)
+        return node
+
+    def fun_name(self):
+        """
+        fun_name : ID
+        """
+        node = FunName(self.current_token)
+        self.eat(FUN_ID)
         return node
 
     def empty(self):

@@ -1,27 +1,6 @@
 from ast import *
 from decimal import Decimal
 
-class Token(object):
-    def __init__(self, type, value):
-        self.type = type
-        self.value = value
-
-    def __str__(self):
-        return 'Token({type}, {value})'.format(
-            type=self.type,
-            value=repr(self.value)
-        )
-
-    def __repr__(self):
-        return self.__str__()
-
-RESERVED_KEYWORDS = {
-    'BEGIN': Token('BEGIN', 'BEGIN'),
-    'END': Token('END', 'END'),
-    'PRINT': Token('PRINT', 'PRINT'),
-    'IF': Token('IF', 'IF'),
-    'ELSE': Token('ELSE', 'ELSE')
-}
 
 class Lexer(object):
     def __init__(self, text):
@@ -66,8 +45,20 @@ class Lexer(object):
         while self.current_char is not None and self.current_char.isalnum():
             result += self.current_char
             self.advance()
+        print(self.current_char)
+        if self.current_char == '(':
+            token = RESERVED_KEYWORDS.get(result, Token(FUN_ID, result))
+        else:
+            token = RESERVED_KEYWORDS.get(result, Token(ID, result))
+        return token
+    
+    def _fun_id(self):
+        result = ''
+        while self.current_char is not None and self.current_char.isalnum():
+            result += self.current_char
+            self.advance()
 
-        token = RESERVED_KEYWORDS.get(result, Token(ID, result))
+        token = RESERVED_KEYWORDS.get(result, Token(FUN_ID, result))
         return token
 
     def get_next_token(self):
@@ -78,6 +69,9 @@ class Lexer(object):
                 continue
 
             if self.current_char.isalpha():
+                #if self.peek() == '(':
+                #    return self._fun_id()
+                #else:
                 return self._id()
 
             if self.current_char.isdigit():

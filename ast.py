@@ -1,7 +1,7 @@
 (INTEGER, PLUS, MINUS, MUL, DIV, LPAREN, RPAREN, ID, ASSIGN,
- BEGIN, END, SEMI, DOT, EOF, PRINT, IF, ELSE, OPEN, CLOSE) = (
+ BEGIN, END, SEMI, DOT, EOF, PRINT, IF, ELSE, OPEN, CLOSE, FUN, FUN_ID) = (
     'INTEGER', 'PLUS', 'MINUS', 'MUL', 'DIV', '(', ')', 'ID', 'ASSIGN',
-    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF', 'PRINT', 'IF', "ELSE", "{", "}"
+    'BEGIN', 'END', 'SEMI', 'DOT', 'EOF', 'PRINT', 'IF', "ELSE", "{", "}", "FUN", "FUN_ID"
 )
 
 class Token(object):
@@ -23,7 +23,8 @@ RESERVED_KEYWORDS = {
     'END': Token('END', 'END'),
     'PRINT': Token('PRINT', 'PRINT'),
     'IF': Token('IF', 'IF'),
-    'ELSE': Token('ELSE', 'ELSE')
+    'ELSE': Token('ELSE', 'ELSE'),
+    'FUN' : Token('FUN', 'FUN')
 }
 
 class AST(object):
@@ -97,7 +98,22 @@ class Var(AST):
     def __repr__(self):
         return self.__str__()
 
+class FunDeclaration(AST):
+    """ The function node """
+    def __init__(self, token, id, statement):
+        self.token = token
+        self.id = id
+        self.statement = statement
 
+class FunName(AST):
+    def __init__(self, token):
+        self.token = token
+        self.value = token.value
+
+class FunInvoke(AST):
+    def __init__(self, token, id):
+        self.token = token
+        self.name = id
 class NoOp(AST):
     pass
 

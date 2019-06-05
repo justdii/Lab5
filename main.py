@@ -5,7 +5,7 @@ def main():
 
     with open("source.dd") as f:
         code = ''.join(f.readlines())
-    print(code)
+    #print(code)
     lexer = Lexer(code)
     parser = Parser(lexer)
     interpreter = Interpreter(parser)

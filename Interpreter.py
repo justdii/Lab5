@@ -22,17 +22,17 @@ class Interpreter(NodeVisitor):
         elif node.op.type == MUL:
             if isinstance(node.left, Num):
                 if node.left.value == 0:
-                    print("left zero")
+                    #print("left zero")
                     return 0
             if isinstance(node.right, Num):
                 if node.right.value == 0:
-                    print("right zero")
+                    #print("right zero")
                     return 0 
             return self.visit(node.left) * self.visit(node.right)
         elif node.op.type == DIV:
             if isinstance(node.left, Num):
                 if node.left.value == 0:
-                    print("left zero")
+                    #print("left zero")
                     return 0
             return self.visit(node.left) / self.visit(node.right)
 
@@ -73,6 +73,16 @@ class Interpreter(NodeVisitor):
             self.visit(left)
         else:
             self.visit(right)
+
+    def visit_FunDeclaration(self, node):
+        #print(node.id.value, node.statement)
+        self.GLOBAL_SCOPE[node.id.value] = node.statement
+
+    def visit_FunInvoke(self, node):
+        #print(node.name, node.name)
+        fun_name = node.name
+
+        self.visit(self.GLOBAL_SCOPE[fun_name.value])
 
     def visit_NoOp(self, node):
         pass
