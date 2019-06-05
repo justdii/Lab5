@@ -20,8 +20,20 @@ class Interpreter(NodeVisitor):
         elif node.op.type == MINUS:
             return self.visit(node.left) - self.visit(node.right)
         elif node.op.type == MUL:
+            if isinstance(node.left, Num):
+                if node.left.value == 0:
+                    print("left zero")
+                    return 0
+            if isinstance(node.right, Num):
+                if node.right.value == 0:
+                    print("right zero")
+                    return 0 
             return self.visit(node.left) * self.visit(node.right)
         elif node.op.type == DIV:
+            if isinstance(node.left, Num):
+                if node.left.value == 0:
+                    print("left zero")
+                    return 0
             return self.visit(node.left) / self.visit(node.right)
 
     def visit_Num(self, node):
@@ -57,7 +69,7 @@ class Interpreter(NodeVisitor):
         condition = node.condition
         left = node.left
         right = node.right
-        if self.visit(condition) > 0:
+        if self.visit(condition) != 0:
             self.visit(left)
         else:
             self.visit(right)

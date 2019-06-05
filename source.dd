@@ -1,12 +1,13 @@
 print 1;
 c := 8* 0;
-a :=  0 * (c-1);
+a :=  1;
 if a {
     print 1;
-    if a - c {
+    if -(a - c) + (a-c) {
         print a - c
     }else{
-        print c - a
+        print 29;
+        print (c - a - 1 - 2 + 0*(a*c)) * 0
     };
     print 10;
     if 10 {
@@ -18,7 +19,7 @@ if a {
         if 9 {}
     }
 }else{
-    print (a*c+10-999999) * 1
+    print ----a * 1
 };
 print a*c;
-print 1 * (a*c+10-999999)
+print 1 * -+-+-2

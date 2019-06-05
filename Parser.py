@@ -143,37 +143,11 @@ class Parser(object):
             elif token.type == DIV:
                 self.eat(DIV)
 
-            right = self.factor()
-            if isinstance(node, Num):
-                if int(node.value) == 0:
-                    """
-                    0 * term -> Num(0)
-                    0 / term -> Num(0)
-                    """
-                    node = Num(Token(INTEGER, 0))
-                    continue
-                if int(node.value) == 1:
-                    """
-                    1 * term -> term
-                    """
-                    node = right
-                    continue
-        
-            if isinstance(right, Num):
-                if int(right.value) == 0:
-                    """
-                    term * 0 -> Num(0)
-                    """
-                    if token.type == DIV: 
-                        raise ZeroDivisionError("Division by zero")    
+            right = self.factor() 
 
-                    node = Num(Token(INTEGER, 0))
-                    continue
-                if int(right.value) == 1:
-                    """
-                    term * 1 -> term
-                    """
-                    continue
+            if isinstance(right, Num) and token.type == DIV:
+                if right.value == 0:
+                    raise ZeroDivisionError("Divison by zero")
 
             node = BinOp(left=node, op=token, right=right)
 
